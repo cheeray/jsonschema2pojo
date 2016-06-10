@@ -84,9 +84,12 @@ public class TypeRule implements Rule<JClassContainer, JType> {
 
         JType type;
 
-        if (propertyTypeName.equals("object") || (node.has("properties") && node.path("properties").size() > 0)) {
-
-            type = ruleFactory.getObjectRule().apply(nodeName, node, jClassContainer.getPackage(), schema);
+        if (propertyTypeName.equals("object") || (node.has("properties") && node.path("properties").size() > 0) || node.has("oneOf")) {
+        	if (node.has("oneOf")) {
+        		type = ruleFactory.getOneOfRule().apply(nodeName, node, jClassContainer.getPackage(), schema);
+        	} else {
+        		type = ruleFactory.getObjectRule().apply(nodeName, node, jClassContainer.getPackage(), schema);
+        	}
         } else if (node.has("javaType")) {
 
             type = getJavaType(node.path("javaType").asText(), jClassContainer.owner());

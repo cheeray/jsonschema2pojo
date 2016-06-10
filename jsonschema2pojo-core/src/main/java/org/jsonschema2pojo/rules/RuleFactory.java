@@ -368,5 +368,16 @@ public class RuleFactory {
     public Rule<JDocCommentable, JDocComment> getJavaNameRule() {
         return new JavaNameRule();
     }
+    
+    /**
+     * Provides a rule instance that should be applied when an "oneOf"
+     * declaration is found in the schema.
+     * 
+     * @return a schema rule that can handle the "oneOf" declaration.
+     */
+    public Rule<JPackage, JType> getOneOfRule() {
+        return new OneOfRule(this, new ParcelableHelper());
+    }
+
 
 }

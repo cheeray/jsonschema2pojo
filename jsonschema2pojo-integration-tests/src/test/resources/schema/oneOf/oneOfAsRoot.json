@@ -1,0 +1,49 @@
+{
+    "id": "http://com.example.oneOf/oneOfAsRootschema#",
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "schema for an oneOf entry",
+    "type": "object",
+    "required": [ "animal" ],
+    "properties": {
+        "animal": {
+            "type": "object",
+            "oneOf": [
+                { "$ref": "#/definitions/dog" },
+                { "$ref": "#/definitions/cat" },
+                { "$ref": "#/definitions/pig" }
+            ]
+        }
+    },
+    "definitions": {
+        "dog": {
+        	"description" : "A dog",
+		    "type" : "object",
+		    "properties" : {
+		     	"name" : { "type" : "string", "required" : true },
+		     	"gender" : { "type" : "string", "required" : true },
+			    "length" : { "type" : "string" },
+		        "bark" : { "type" : "boolean" }
+		    }
+    	},
+        "cat": {
+        	"description" : "A cat",
+		    "type" : "object",
+		    "properties" : {
+		     	"name" : { "type" : "string", "required" : true },
+		     	"gender" : { "type" : "string", "required" : true },
+			    "length" : { "type" : "string" },
+		        "meow" : { "type" : "boolean" }
+		    }
+        },
+        "pig": {
+        	"description" : "A pig",
+		    "type" : "object",
+		    "properties" : {
+		     	"name" : { "type" : "string", "required" : true },
+		     	"gender" : { "type" : "string", "required" : true },
+			    "length" : { "type" : "string" },
+		        "ohio" : { "type" : "boolean" }
+		    }
+        }
+    }
+}

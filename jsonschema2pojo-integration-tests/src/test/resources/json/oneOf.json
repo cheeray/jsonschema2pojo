@@ -1,0 +1,6 @@
+{
+    "animal" : {"name" : "spot",
+		     	"gender" : "male",
+			    "length" : "86",
+		        "bark" : "true"}
+}

@@ -141,4 +141,28 @@ public class JsonTypesIT {
 
     }
 
+    @Test
+    public void oneOfTypesProduceObjects() throws Exception {
+
+        ClassLoader resultsClassLoader = schemaRule.generateAndCompile("/schema/oneOf/oneOfAsRoot.json", "com.example");
+
+        Class<?> oneOfClass = resultsClassLoader.loadClass("com.example.OneOfAsRoot");
+        Class<?> animalClass = resultsClassLoader.loadClass("com.example.Animal");
+        Class<?> dogClass = resultsClassLoader.loadClass("com.example.Dog");
+        Object oneOfObject = OBJECT_MAPPER.readValue(this.getClass().getResourceAsStream("/json/oneOf.json"), oneOfClass);
+        
+        assertNotNull(oneOfObject);
+        assertThat(oneOfObject, instanceOf(oneOfClass));
+        
+        Object a = oneOfClass.getMethod("getAnimal").invoke(oneOfObject);
+        assertNotNull(a);
+        assertThat(a, instanceOf(animalClass));
+        
+        Object dog = animalClass.getMethod("getValue").invoke(a);
+        assertNotNull(dog);
+        assertThat(dog, instanceOf(dogClass));
+        assertThat(dogClass.getMethod("getName").invoke(dog).toString(), is("spot"));
+
+    }
+    
 }
