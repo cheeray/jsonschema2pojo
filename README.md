@@ -1,6 +1,7 @@
 # jsonschema2pojo [![Build Status](https://travis-ci.org/joelittlejohn/jsonschema2pojo.svg?branch=master)](https://travis-ci.org/joelittlejohn/jsonschema2pojo) [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.jsonschema2pojo/jsonschema2pojo/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.jsonschema2pojo/jsonschema2pojo)
 
 _jsonschema2pojo_ generates Java types from JSON Schema (or example JSON) and can annotate those types for data-binding with Jackson 1.x, Jackson 2.x or Gson.
+Partially support draft-4 by implement "oneOf" solution.
 
 ### [Try jsonschema2pojo online](http://jsonschema2pojo.org/)<br>or `brew install jsonschema2pojo`
 
