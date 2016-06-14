@@ -51,5 +51,4 @@ public class OneOfIT {
 		assertThat(isPublic(rootEnumClass.getModifiers()), is(true));
 
 	}
-
 }

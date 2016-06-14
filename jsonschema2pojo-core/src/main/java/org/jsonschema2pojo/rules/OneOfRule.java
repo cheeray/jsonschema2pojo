@@ -92,7 +92,8 @@ import com.sun.codemodel.JVar;
  */
 public class OneOfRule implements Rule<JPackage, JType> {
 
-	private static final String GETTER_NAME = "getValue";
+	private static final String GETTER_VALUE_NAME = "getValue";
+	private static final String GETTER_ONE_OF_NAME = "oneOf";
 	private static final String FACTORY_METHOD_NAME = "fromValue";
 	private static final String ONE_OF = "oneOf";
 	private static final String REF = "$ref";
@@ -202,6 +203,12 @@ public class OneOfRule implements Rule<JPackage, JType> {
 
 		// Create getter ...
 		createGetter(oneOf, jsonValue, valueField);
+
+		// Add getter for oneOf Type ...
+		JMethod getter = oneOf.method(JMod.PUBLIC, oneOfOptions,
+				GETTER_ONE_OF_NAME);
+		JBlock getterBody = getter.body();
+		getterBody._return(JExpr._this().ref(oneOfField));
 	}
 
 	/**
@@ -214,7 +221,8 @@ public class OneOfRule implements Rule<JPackage, JType> {
 	private void createGetter(JDefinedClass oneOf, JClass jsonValue,
 			JFieldVar valueField) {
 		// Add getter ...
-		JMethod getter = oneOf.method(JMod.PUBLIC, Object.class, GETTER_NAME);
+		JMethod getter = oneOf.method(JMod.PUBLIC, Object.class,
+				GETTER_VALUE_NAME);
 		JBlock getterBody = getter.body();
 		getterBody._return(JExpr._this().ref(valueField));
 		getter.annotate(jsonValue);
