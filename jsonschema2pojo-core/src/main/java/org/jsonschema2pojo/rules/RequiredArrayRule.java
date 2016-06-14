@@ -16,7 +16,18 @@
 
 package org.jsonschema2pojo.rules;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import javax.validation.constraints.NotNull;
+
+import org.jsonschema2pojo.Schema;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.sun.codemodel.JAnnotatable;
+import com.sun.codemodel.JAnnotationUse;
 import com.sun.codemodel.JDefinedClass;
 import com.sun.codemodel.JDocComment;
 import com.sun.codemodel.JDocCommentable;
@@ -24,92 +35,100 @@ import com.sun.codemodel.JFieldVar;
 import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JType;
 
-import org.jsonschema2pojo.Schema;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
-import javax.validation.constraints.NotNull;
-
 /**
  * Applies the "required" JSON schema rule.
- *
+ * 
  * @see <a
- * href="http://tools.ietf.org/html/draft-fge-json-schema-validation-00#section-5.4.3">http://tools.ietf.org/html/draft-fge-json-schema-validation-00#section-5.4.3</a>
+ *      href="http://tools.ietf.org/html/draft-fge-json-schema-validation-00#section-5.4.3">http://tools.ietf.org/html/draft-fge-json-schema-validation-00#section-5.4.3</a>
  */
 public class RequiredArrayRule implements Rule<JDefinedClass, JDefinedClass> {
 
-    private final RuleFactory ruleFactory;
+	private final RuleFactory ruleFactory;
 
-    public static final String REQUIRED_COMMENT_TEXT = "\n(Required)";
+	public static final String REQUIRED_COMMENT_TEXT = "\n(Required)";
 
-    protected RequiredArrayRule(RuleFactory ruleFactory) {
-        this.ruleFactory = ruleFactory;
-    }
+	protected RequiredArrayRule(RuleFactory ruleFactory) {
+		this.ruleFactory = ruleFactory;
+	}
 
-    @Override
-    public JDefinedClass apply(String nodeName, JsonNode node, JDefinedClass jclass, Schema schema) {
-        List<String> requiredFieldMethods = new ArrayList<String>();
+	@Override
+	public JDefinedClass apply(String nodeName, JsonNode node,
+			JDefinedClass jclass, Schema schema) {
+		List<String> requiredFieldMethods = new ArrayList<String>();
 
-        JsonNode properties = schema.getContent().get("properties");
+		JsonNode properties = schema.getContent().get("properties");
 
-        for (Iterator<JsonNode> iterator = node.elements(); iterator.hasNext(); ) {
-            String requiredArrayItem = iterator.next().asText();
+		for (Iterator<JsonNode> iterator = node.elements(); iterator.hasNext();) {
+			String requiredArrayItem = iterator.next().asText();
 
-            JsonNode propertyNode = null;
+			JsonNode propertyNode = null;
 
-            if (properties != null) {
-                propertyNode = properties.findValue(requiredArrayItem);
-            }
+			if (properties != null) {
+				propertyNode = properties.findValue(requiredArrayItem);
+			}
 
-            String fieldName = ruleFactory.getNameHelper().getPropertyName(requiredArrayItem, propertyNode);
-            JFieldVar field = jclass.fields().get(fieldName);
+			String fieldName = ruleFactory.getNameHelper().getPropertyName(
+					requiredArrayItem, propertyNode);
+			JFieldVar field = jclass.fields().get(fieldName);
 
-            if (field == null) {
-                continue;
-            }
+			if (field == null) {
+				continue;
+			}
 
-            addJavaDoc(field);
+			addJavaDoc(field);
 
-            if (ruleFactory.getGenerationConfig().isIncludeJsr303Annotations()) {
-                addNotNullAnnotation(field);
-            }
+			addRequiredAnnotation(field);
 
-            requiredFieldMethods.add(getGetterName(fieldName, field.type(), node));
-            requiredFieldMethods.add(getSetterName(fieldName, node));
-        }
+			if (ruleFactory.getGenerationConfig().isIncludeJsr303Annotations()) {
+				addNotNullAnnotation(field);
+			}
 
-        updateGetterSetterJavaDoc(jclass, requiredFieldMethods);
+			requiredFieldMethods.add(getGetterName(fieldName, field.type(),
+					node));
+			requiredFieldMethods.add(getSetterName(fieldName, node));
+		}
 
-        return jclass;
-    }
+		updateGetterSetterJavaDoc(jclass, requiredFieldMethods);
 
-    private void updateGetterSetterJavaDoc(JDefinedClass jclass, List<String> requiredFieldMethods) {
-        for (Iterator methods = jclass.methods().iterator(); methods.hasNext(); ) {
-            JMethod method = (JMethod) methods.next();
-            if (requiredFieldMethods.contains(method.name())) {
-                addJavaDoc(method);
-            }
-        }
-    }
+		return jclass;
+	}
 
-    private void addNotNullAnnotation(JFieldVar field) {
-        field.annotate(NotNull.class);
-    }
+	private void updateGetterSetterJavaDoc(JDefinedClass jclass,
+			List<String> requiredFieldMethods) {
+		for (Iterator methods = jclass.methods().iterator(); methods.hasNext();) {
+			JMethod method = (JMethod) methods.next();
+			if (requiredFieldMethods.contains(method.name())) {
+				addJavaDoc(method);
+			}
+		}
+	}
 
+	private void addNotNullAnnotation(JFieldVar field) {
+		field.annotate(NotNull.class);
+	}
 
-    private void addJavaDoc(JDocCommentable docCommentable) {
-        JDocComment javadoc = docCommentable.javadoc();
-        javadoc.append(REQUIRED_COMMENT_TEXT);
-    }
+	private void addJavaDoc(JDocCommentable docCommentable) {
+		JDocComment javadoc = docCommentable.javadoc();
+		javadoc.append(REQUIRED_COMMENT_TEXT);
+	}
 
-    private String getSetterName(String propertyName, JsonNode node) {
-        return ruleFactory.getNameHelper().getSetterName(propertyName, node);
-    }
+	private String getSetterName(String propertyName, JsonNode node) {
+		return ruleFactory.getNameHelper().getSetterName(propertyName, node);
+	}
 
-    private String getGetterName(String propertyName, JType type, JsonNode node) {
-        return ruleFactory.getNameHelper().getGetterName(propertyName, type, node);
-    }
+	private String getGetterName(String propertyName, JType type, JsonNode node) {
+		return ruleFactory.getNameHelper().getGetterName(propertyName, type,
+				node);
+	}
+
+	private void addRequiredAnnotation(JAnnotatable v) {
+		for (JAnnotationUse a : v.annotations()) {
+			// FIXME: use JCodeModel refer ...
+			if (a.getAnnotationClass().name()
+					.equals(JsonProperty.class.getSimpleName())) {
+				a.param("required", true);
+			}
+		}
+	}
 
 }
