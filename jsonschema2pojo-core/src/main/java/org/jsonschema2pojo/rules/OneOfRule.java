@@ -548,8 +548,33 @@ public class OneOfRule implements Rule<JPackage, JType> {
 						.ref(System.class)
 						.staticRef("out")
 						.invoke("println")
-						.arg(forEach.var().ref(OPTIONAL_FIELD_NAME)
-								.ref("length")));
+						.arg(parent
+								.owner()
+								.ref(String.class)
+								.staticInvoke("format")
+								.arg("Required: %s")
+								.arg(parent
+										.owner()
+										.ref(Arrays.class)
+										.staticInvoke("toString")
+										.arg(forEach.var().ref(
+												REQUIRED_FIELD_NAME)))));
+		forEach.body().add(
+				parent.owner()
+						.ref(System.class)
+						.staticRef("out")
+						.invoke("println")
+						.arg(parent
+								.owner()
+								.ref(String.class)
+								.staticInvoke("format")
+								.arg("Optional: %s")
+								.arg(parent
+										.owner()
+										.ref(Arrays.class)
+										.staticInvoke("toString")
+										.arg(forEach.var().ref(
+												OPTIONAL_FIELD_NAME)))));
 		// Check fields ...
 
 		JVar requires = forEach.body()
@@ -571,8 +596,24 @@ public class OneOfRule implements Rule<JPackage, JType> {
 				parent.owner().ref(List.class).narrow(String.class), "fields");
 		fields.init(JExpr._new(stringListType).arg(keys));
 
-		matchRequires._then().add(fields.invoke("removeAll").arg(requires));
+		matchRequires._then().add(
+				fields.invoke("removeAll").arg(
+						parent.owner().ref(Arrays.class).staticInvoke("asList")
+								.arg(forEach.var().ref(REQUIRED_FIELD_NAME))));
 		matchRequires._then().add(fields.invoke("removeAll").arg(optionals));
+		matchRequires._then().add(
+				parent.owner()
+						.ref(System.class)
+						.staticRef("out")
+						.invoke("println")
+						.arg(parent
+								.owner()
+								.ref(String.class)
+								.staticInvoke("format")
+								.arg("Delta: %s")
+								.arg(parent.owner().ref(Arrays.class)
+										.staticInvoke("toString")
+										.arg(fields.invoke("toArray")))));
 		JConditional matchOptionals = matchRequires._then()._if(
 				fields.invoke("isEmpty"));
 		matchOptionals._then()._return(
@@ -584,9 +625,10 @@ public class OneOfRule implements Rule<JPackage, JType> {
 										valueParam))
 								.arg(forEach.var().ref(CLASS_FIELD_NAME))));
 
-		JAnnotationUse annotate = fromValue.annotate(jsonCreator);
+		// JAnnotationUse annotate = fromValue.annotate(jsonCreator);
 		// annotate.param("mode", Mode.DELEGATING);
 
+		fromValue.annotate(jsonCreator);
 		body._return(JExpr._null());
 	}
 
