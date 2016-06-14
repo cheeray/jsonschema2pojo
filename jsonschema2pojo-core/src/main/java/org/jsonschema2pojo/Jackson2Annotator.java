@@ -33,6 +33,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.sun.codemodel.JAnnotationArrayMember;
+import com.sun.codemodel.JAnnotationUse;
 import com.sun.codemodel.JDefinedClass;
 import com.sun.codemodel.JEnumConstant;
 import com.sun.codemodel.JFieldVar;
@@ -62,7 +63,10 @@ public class Jackson2Annotator extends AbstractAnnotator {
 
     @Override
     public void propertyField(JFieldVar field, JDefinedClass clazz, String propertyName, JsonNode propertyNode) {
-        field.annotate(JsonProperty.class).param("value", propertyName);
+    	JAnnotationUse jau = field.annotate(JsonProperty.class).param("value", propertyName);
+    	if (propertyNode.has("required") && propertyNode.get("required").asBoolean()) {
+    		jau.param("required", true);
+    	}
         if (field.type().erasure().equals(field.type().owner().ref(Set.class))) {
             field.annotate(JsonDeserialize.class).param("as", LinkedHashSet.class);
         }

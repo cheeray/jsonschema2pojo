@@ -18,8 +18,12 @@ package org.jsonschema2pojo.rules;
 
 import javax.validation.constraints.NotNull;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import org.jsonschema2pojo.Schema;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.sun.codemodel.JAnnotatable;
+import com.sun.codemodel.JAnnotationUse;
 import com.sun.codemodel.JDocComment;
 import com.sun.codemodel.JDocCommentable;
 import com.sun.codemodel.JFieldVar;
@@ -32,48 +36,59 @@ import com.sun.codemodel.JFieldVar;
  */
 public class RequiredRule implements Rule<JDocCommentable, JDocComment> {
 
-    /**
-     * Text added to JavaDoc to indicate that a field is required
-     */
-    public static final String REQUIRED_COMMENT_TEXT = "\n(Required)";
+	/**
+	 * Text added to JavaDoc to indicate that a field is required
+	 */
+	public static final String REQUIRED_COMMENT_TEXT = "\n(Required)";
 
-    private final RuleFactory ruleFactory;
+	private final RuleFactory ruleFactory;
 
-    protected RequiredRule(RuleFactory ruleFactory) {
-        this.ruleFactory = ruleFactory;
-    }
+	protected RequiredRule(RuleFactory ruleFactory) {
+		this.ruleFactory = ruleFactory;
+	}
 
-    /**
-     * Applies this schema rule to take the required code generation steps.
-     * <p>
-     * The required rule simply adds a note to the JavaDoc comment to mark a
-     * property as required.
-     * 
-     * @param nodeName
-     *            the name of the schema node for which this "required" rule has
-     *            been added
-     * @param node
-     *            the "required" node, having a value <code>true</code> or
-     *            <code>false</code>
-     * @param generatableType
-     *            the class or method which may be marked as "required"
-     * @return the JavaDoc comment attached to the generatableType, which
-     *         <em>may</em> have an added not to mark this construct as
-     *         required.
-     */
-    @Override
-    public JDocComment apply(String nodeName, JsonNode node, JDocCommentable generatableType, Schema schema) {
-        JDocComment javadoc = generatableType.javadoc();
+	/**
+	 * Applies this schema rule to take the required code generation steps.
+	 * <p>
+	 * The required rule simply adds a note to the JavaDoc comment to mark a
+	 * property as required.
+	 * 
+	 * @param nodeName
+	 *            the name of the schema node for which this "required" rule has
+	 *            been added
+	 * @param node
+	 *            the "required" node, having a value <code>true</code> or
+	 *            <code>false</code>
+	 * @param generatableType
+	 *            the class or method which may be marked as "required"
+	 * @return the JavaDoc comment attached to the generatableType, which
+	 *         <em>may</em> have an added not to mark this construct as
+	 *         required.
+	 */
+	@Override
+	public JDocComment apply(String nodeName, JsonNode node,
+			JDocCommentable generatableType, Schema schema) {
+		JDocComment javadoc = generatableType.javadoc();
 
-        if (node.asBoolean()) {
-            javadoc.append(REQUIRED_COMMENT_TEXT);
+		if (node.asBoolean()) {
+			javadoc.append(REQUIRED_COMMENT_TEXT);
 
-            if (ruleFactory.getGenerationConfig().isIncludeJsr303Annotations()
-                    && generatableType instanceof JFieldVar) {
-                ((JFieldVar) generatableType).annotate(NotNull.class);
-            }
-        }
+			if (ruleFactory.getGenerationConfig().isIncludeJsr303Annotations()
+					&& generatableType instanceof JFieldVar) {
+				((JFieldVar) generatableType).annotate(NotNull.class);
+			}
 
-        return javadoc;
-    }
+			if (generatableType instanceof JAnnotatable) {
+				JAnnotatable fv = ((JAnnotatable) generatableType);
+				for (JAnnotationUse a : fv.annotations()) {
+					// FIXME: use JCodeModel refer ...
+					if (a.getAnnotationClass().name().equals(JsonProperty.class.getSimpleName())) {
+						a.param("required", true);
+					}
+				}
+			}
+		}
+
+		return javadoc;
+	}
 }

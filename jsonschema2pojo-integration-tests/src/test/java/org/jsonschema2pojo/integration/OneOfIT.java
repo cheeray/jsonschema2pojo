@@ -45,7 +45,7 @@ public class OneOfIT {
 				"/schema/oneOf/oneOfAsRoot.json", "com.example");
 
 		Class<Enum> rootEnumClass = (Class<Enum>) resultsClassLoader
-				.loadClass("com.example.Animal");
+				.loadClass("com.example.Animal$ONE_OF");
 
 		assertThat(rootEnumClass.isEnum(), is(true));
 		assertThat(isPublic(rootEnumClass.getModifiers()), is(true));
