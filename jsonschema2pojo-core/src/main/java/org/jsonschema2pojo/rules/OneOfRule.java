@@ -47,12 +47,14 @@ import org.jsonschema2pojo.util.SerializableHelper;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.sun.codemodel.ClassType;
 import com.sun.codemodel.JAnnotationUse;
 import com.sun.codemodel.JBlock;
+import com.sun.codemodel.JCatchBlock;
 import com.sun.codemodel.JClass;
 import com.sun.codemodel.JClassAlreadyExistsException;
 import com.sun.codemodel.JClassContainer;
@@ -67,6 +69,7 @@ import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
 import com.sun.codemodel.JPackage;
 import com.sun.codemodel.JStatement;
+import com.sun.codemodel.JTryBlock;
 import com.sun.codemodel.JType;
 import com.sun.codemodel.JVar;
 
@@ -654,7 +657,8 @@ public class OneOfRule implements Rule<JPackage, JType> {
 
 		JConditional matchOptionals = matchRequires._then()._if(
 				fields.invoke("isEmpty"));
-		matchOptionals._then()._return(
+		JTryBlock tryReturn = matchOptionals._then()._try();
+		tryReturn.body()._return(
 				JExpr._new(parent)
 						.arg(forEach.var())
 						.arg(mapper
@@ -662,7 +666,19 @@ public class OneOfRule implements Rule<JPackage, JType> {
 								.arg(mapper.invoke("writeValueAsString").arg(
 										valueParam))
 								.arg(forEach.var().ref(CLASS_FIELD_NAME))));
-
+		JCatchBlock catchBlock = tryReturn._catch(parent.owner().ref(
+				JsonMappingException.class));
+		JVar exception = catchBlock.param("e");
+		catchBlock.body().add(
+				parent.owner()
+						.ref(System.class)
+						.staticRef("out")
+						.invoke("println")
+						.arg(parent.owner().ref(String.class)
+								.staticInvoke("format")
+								.arg("Failed convert to %s: %s")
+								.arg(forEach.var().ref(CLASS_FIELD_NAME))
+								.arg(exception.invoke("getMessage"))));
 		// JAnnotationUse annotate = fromValue.annotate(jsonCreator);
 		// annotate.param("mode", Mode.DELEGATING);
 
